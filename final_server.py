@@ -9,18 +9,15 @@ app = FastAPI()
 
 @app.post("/")
 async def upload(files: List[UploadFile] = File(...)):
+    contents = []
     for file in files:
-        try:
-            contents = await file.read()
-            dot = find_dot.find(file.filename)
-            with open(f"{file.filename[:dot-2]}.jpg", 'ab') as f:
-                f.write(contents)
-        except Exception:
-            return {"message": "There was an error uploading the file(s)"}
-        finally:
-            await file.close()
+        await file.seek(0)
+        contents.append(await file.read())
+        await file.close()
+        dot = find_dot.find(file.filename)
+    with open (f"/home/tzur/server-tools/a/{file.filename[:dot-2]}.jpg", "wb") as file:
+        file.writelines(contents)
     elogger.write("wrote")
-    encryptor.encrypt(f"{file.filename[:dot-2]}.jpg")
     return {"message": f"Successfuly uploaded {[file.filename for file in files]}"}
 
 if __name__ == '__main__':
